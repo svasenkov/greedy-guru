@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -22,8 +23,8 @@ import (
 // WebDriver chrome-min is later, if we crystallize Selenium.
 const defaultPwMinImage = "qaguru/playwright-chromium:1.61.1-min"
 
-// Host Chrome /json/version — same 5s as cdp.DefaultTimeoutMS (do not import cdp: cycle).
-const hostDebugWait = 5 * time.Second
+// Host Chrome boot: /json/version (not IR step budget).
+const hostDebugWait = 10 * time.Second
 
 // Docker pw-min: image start + port map, not IR.
 const pwMinDebugWait = 20 * time.Second
@@ -33,15 +34,44 @@ var (
 	appHost   = "127.0.0.1"
 )
 
+func chromeLockDir() string {
+	return filepath.Join(os.TempDir(), "greedy-guru-chrome.lock.d")
+}
+
+func processAlive(pid int) bool {
+	if pid <= 0 {
+		return false
+	}
+	p, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+	return p.Signal(syscall.Signal(0)) == nil
+}
+
+func staleChromeLock(dir string) bool {
+	b, err := os.ReadFile(filepath.Join(dir, "pid"))
+	if err != nil {
+		return true
+	}
+	pid, err := strconv.Atoi(strings.TrimSpace(string(b)))
+	if err != nil {
+		return true
+	}
+	return !processAlive(pid)
+}
+
 func chromeLock() func() {
-	dir := filepath.Join(os.TempDir(), "greedy-guru-chrome.lock.d")
+	dir := chromeLockDir()
 	deadline := time.Now().Add(30 * time.Second)
 	for {
 		if err := os.Mkdir(dir, 0o700); err == nil {
-			return func() { _ = os.Remove(dir) }
+			_ = os.WriteFile(filepath.Join(dir, "pid"), []byte(strconv.Itoa(os.Getpid())), 0o600)
+			return func() { _ = os.RemoveAll(dir) }
 		}
-		if time.Now().After(deadline) {
-			return func() {}
+		if staleChromeLock(dir) || time.Now().After(deadline) {
+			_ = os.RemoveAll(dir)
+			continue
 		}
 		time.Sleep(40 * time.Millisecond)
 	}
@@ -86,8 +116,14 @@ func AppURL(srv *httptest.Server) string {
 }
 
 func ChromeBin() string {
-	if b := os.Getenv("CHROME_BIN"); b != "" {
+	if b := strings.TrimSpace(os.Getenv("CHROME_BIN")); b != "" {
 		return b
+	}
+	if runtime.GOOS == "darwin" {
+		p := "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+		if st, err := os.Stat(p); err == nil && !st.IsDir() {
+			return p
+		}
 	}
 	return ""
 }
@@ -173,11 +209,13 @@ func startHostChrome(t testing.TB, ctx context.Context) string {
 		_, _ = cmd.Process.Wait()
 	})
 	url := "http://127.0.0.1:" + strconv.Itoa(port)
-	waitDebug(t, ctx, url, hostDebugWait, "")
+	waitCtx, cancel := context.WithTimeout(context.Background(), hostDebugWait)
+	defer cancel()
+	waitDebug(t, waitCtx, url, hostDebugWait, "")
 	return url
 }
 
-func startPwMin(t testing.TB, ctx context.Context) string {
+func startPwMin(t testing.TB, _ context.Context) string {
 	t.Helper()
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("docker not on PATH; need playwright-chromium min")
@@ -220,7 +258,9 @@ exec "$bin" ` + chromeCmd
 		image,
 		"-lc", script,
 	}
-	out, err := exec.CommandContext(ctx, "docker", args...).CombinedOutput()
+	runCtx, runCancel := context.WithTimeout(context.Background(), 40*time.Second)
+	defer runCancel()
+	out, err := exec.CommandContext(runCtx, "docker", args...).CombinedOutput()
 	if err != nil {
 		t.Fatalf("docker run pw-min: %v\n%s", err, out)
 	}
@@ -228,7 +268,9 @@ exec "$bin" ` + chromeCmd
 		_ = exec.Command("docker", "rm", "-f", name).Run()
 	})
 	url := "http://127.0.0.1:" + strconv.Itoa(hostPort)
-	waitDebug(t, ctx, url, pwMinDebugWait, name)
+	waitCtx, waitCancel := context.WithTimeout(context.Background(), pwMinDebugWait)
+	defer waitCancel()
+	waitDebug(t, waitCtx, url, pwMinDebugWait, name)
 	return url
 }
 

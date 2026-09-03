@@ -75,7 +75,7 @@ func TestRunLoginFromTraceChrome(t *testing.T) {
 	}
 	root := moduleRoot(t)
 	srv := liveutil.ServeApp(t, filepath.Join(root, "testdata", "app-live"))
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	t.Cleanup(cancel)
 	sess := dialChrome(t, ctx)
 	cr, err := trace.ToCrystal(filepath.Join(root, "testdata", "trace", "login.trace"), trace.Options{

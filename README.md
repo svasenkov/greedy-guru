@@ -12,7 +12,10 @@
 
 ```bash
 cd projects/greedy-token-home/greedy-guru
-go test ./...
+go test ./... -p 1         # live CDP: Mac → Chrome.app, иначе docker pw-min
+go test ./... -short       # без live Chrome
+# GREEDY_CDP=http://127.0.0.1:9222 go test ./... -p 1
+# CHROME_BIN=/path/to/chrome go test ./... -p 1
 go run ./cmd/greedy version
 go run ./cmd/greedy help
 go run ./cmd/greedy search --path testdata/search p1-search-marker-a1b2
