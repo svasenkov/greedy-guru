@@ -1,0 +1,3 @@
+{"version":8,"type":"context-options","origin":"library","testIdAttributeName":"data-testid","options":{}}
+{"type":"before","callId":"call@1","class":"Frame","method":"fill","params":{"selector":"internal:role=textbox","value":"user1"}}
+{"type":"after","callId":"call@1"}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>register</title>
+</head>
+<body>
+  <header data-testid="header">
+    <nav data-testid="header-nav">
+      <a href="/" data-testid="header-nav-home">Home</a>
+      <a href="/login" data-testid="header-nav-login">Login</a>
+      <a href="/register" data-testid="header-nav-register">Register</a>
+    </nav>
+  </header>
+  <h1 data-testid="register-form-title">Register</h1>
+  <form id="register-form" data-testid="register-form">
+    <input data-testid="register-login-input" name="username">
+    <input data-testid="register-password-input" name="password" type="password">
+    <input data-testid="confirm-password-input" name="confirm-password" type="password">
+    <p data-testid="register-error-message" hidden></p>
+    <button data-testid="register-submit-button" type="submit">Register</button>
+  </form>
+  <p><a href="/login" data-testid="login-link">Login</a></p>
+  <script>
+    document.getElementById("register-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var u = document.querySelector("[data-testid=register-login-input]").value.trim();
+      var p = document.querySelector("[data-testid=register-password-input]").value.trim();
+      var c = document.querySelector("[data-testid=confirm-password-input]").value.trim();
+      var err = document.querySelector("[data-testid=register-error-message]");
+      function fail(msg) {
+        err.hidden = false;
+        err.textContent = msg;
+      }
+      if (!u && !p) {
+        fail("Login and password are required (minimum 3 and 6 characters)");
+        return;
+      }
+      if (!u) {
+        fail("Login is required (minimum 3 characters)");
+        return;
+      }
+      if (u.length < 3) {
+        fail("Login must be at least 3 characters");
+        return;
+      }
+      if (!p) {
+        fail("Password is required (minimum 6 characters)");
+        return;
+      }
+      if (p.length < 6) {
+        fail("Password must be at least 6 characters");
+        return;
+      }
+      if (p !== c) {
+        fail("Passwords do not match");
+        return;
+      }
+      if (u === "user1") {
+        fail("Username already taken");
+        return;
+      }
+      location.href = "/home?user=" + encodeURIComponent(u);
+    });
+  </script>
+</body>
+</html>

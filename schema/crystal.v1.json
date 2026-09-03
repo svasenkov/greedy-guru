@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greedy.guru/schema/crystal.v1.json",
+  "title": "greedy.guru crystal IR v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "version", "steps"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["cdp", "cli"] },
+    "version": { "const": 1 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "as_id": { "type": "string" },
+        "lang": { "type": "string" },
+        "fingerprint": { "type": "string" }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["op"],
+        "properties": {
+          "op": {
+            "enum": ["navigate", "wait", "click", "fill", "text", "eval", "park"]
+          },
+          "selector": { "type": "string" },
+          "value": { "type": "string" },
+          "url": { "type": "string" },
+          "timeout_ms": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

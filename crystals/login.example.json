@@ -1,0 +1,18 @@
+{
+  "id": "example",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "lang": "typescript-playwright",
+    "fingerprint": "example-not-live"
+  },
+  "steps": [
+    { "op": "navigate", "url": "/login" },
+    { "op": "wait", "selector": "[data-testid=login-username]", "timeout_ms": 5000 },
+    { "op": "fill", "selector": "[data-testid=login-username]", "value": "user1" },
+    { "op": "fill", "selector": "[data-testid=login-password]", "value": "password1" },
+    { "op": "click", "selector": "[data-testid=login-submit]" },
+    { "op": "text", "selector": "[data-testid=home-welcome]", "value": "Welcome, user1!" },
+    { "op": "park", "url": "/login" }
+  ]
+}

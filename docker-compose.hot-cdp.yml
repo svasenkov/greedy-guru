@@ -1,0 +1,25 @@
+# Fallback sidecar for hot CDP — not the pool SSOT.
+# SSOT: selenoid-pool docker-compose.hot.yml (hot-cdp-min-1…5, protocol cdp, lease cdpUrl).
+# This file is 1× on 16443 only. Do not `up` alongside pool `hot-cdp-min-1` (same bind).
+# Use this file only when POST /pool/lease {protocol:cdp} is unavailable.
+# Same image as hot-pw-min, Chromium over CDP, not PW WS :3000. Not an ensure.py stand.
+#
+#   docker compose -f docker-compose.hot-cdp.yml up -d
+#   GREEDY_SPA_HOT=1 go test -count=1 -timeout 2m -v -run TestRunLoginSPAHotChrome ./internal/cdp/
+#   GREEDY_CDP=… only to skip lease (explicit URL).
+name: greedy-hot-cdp
+services:
+  hot-cdp-min-1:
+    image: qaguru/playwright-chromium:1.61.1-min
+    container_name: hot-cdp-min-1
+    restart: unless-stopped
+    init: true
+    shm_size: "2gb"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:16443:9223"
+    volumes:
+      - ./internal/liveutil/cdpproxy.pl:/tmp/cdpproxy.pl:ro
+      - ./internal/liveutil/hot-cdp-entrypoint.sh:/tmp/hot-cdp-entrypoint.sh:ro
+    entrypoint: ["/bin/bash", "/tmp/hot-cdp-entrypoint.sh"]

@@ -1,0 +1,11 @@
+{"version":8,"type":"context-options","origin":"library","testIdAttributeName":"data-testid","options":{"baseURL":"https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/"}}
+{"type":"before","callId":"call@8","class":"Frame","method":"goto","params":{"url":"login","timeout":0,"waitUntil":"load"}}
+{"type":"after","callId":"call@8"}
+{"type":"before","callId":"call@10","class":"Frame","method":"fill","params":{"selector":"internal:testid=[data-testid=\"login-input\"s]","strict":true,"value":"user1","timeout":0}}
+{"type":"after","callId":"call@10"}
+{"type":"before","callId":"call@12","class":"Frame","method":"fill","params":{"selector":"internal:testid=[data-testid=\"password-input\"s]","strict":true,"value":"password1","timeout":0}}
+{"type":"after","callId":"call@12"}
+{"type":"before","callId":"call@14","class":"Frame","method":"click","params":{"selector":"internal:testid=[data-testid=\"submit-button\"s]","strict":true,"timeout":0}}
+{"type":"after","callId":"call@14"}
+{"type":"before","callId":"call@21","title":"Expect \"toContainText\"","class":"Frame","method":"expect","params":{"selector":"internal:testid=[data-testid=\"welcome-message\"s]","expression":"to.have.text","expectedText":[{"string":"Welcome, user1!","matchSubstring":true,"normalizeWhiteSpace":true}],"isNot":false,"timeout":5000}}
+{"type":"after","callId":"call@21"}

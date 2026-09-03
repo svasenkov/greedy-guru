@@ -1,0 +1,23 @@
+{
+  "allure_generate": false,
+  "app": "testdata/app-live",
+  "cdp": "1 hot Chrome",
+  "crystal": "tests-go-cdp/crystals/login.json",
+  "id": "login",
+  "measured_at": "2026-08-27",
+  "mode": "none",
+  "ok": true,
+  "ok_count": 1,
+  "parallel": 1,
+  "runs": 1,
+  "steps": 7,
+  "wall_ms": 90,
+  "workers": [
+    {
+      "id": "login",
+      "ok": true,
+      "steps": 7,
+      "wall_ms": 90
+    }
+  ]
+}

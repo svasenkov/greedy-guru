@@ -1,0 +1,5 @@
+/greedy
+*.exe
+allure-results/
+allure-report/
+.DS_Store
