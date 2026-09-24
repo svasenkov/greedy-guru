@@ -1,64 +1,71 @@
-# greedy.guru
+# greedy
 
-Жёсткий cut [greedy-token](https://github.com/svasenkov/greedy-token): IR-кристаллы и Go-раннер CDP. Не Python MCP и **не** MCP-обёртка этого CLI (осознанно, ADR 015 §7): смоук вызывается бинарником из кода/CI.
+**Write tests in Playwright. Replay them as crystals on hot Chrome — a single Go binary, raw CDP, no Node.**
 
-| | |
-|--|--|
-| Репозиторий | [svasenkov/greedy-guru](https://github.com/svasenkov/greedy-guru) |
-| Домен | [greedy.guru](https://greedy.guru) (прод: Box3 static; DNS в infra-home) |
-| ADR | [015](../../../docs/adr/015-greedy-guru.md) |
-| План | [docs/plans/greedy-guru.md](../../../docs/plans/greedy-guru.md) |
-| Фаза | `10.greedy-guru` ✓ · mill [`greedy-guru-mill`](../../../docs/plans/greedy-guru-mill.md) ✓ (не 11) · mill — колонка crystal на `/stack/` |
+[RU version → README-RU.md](README-RU.md) · Site: [greedy.guru](https://greedy.guru)
 
-```bash
-cd projects/greedy-guru-home/greedy-guru
-go test ./... -p 1         # live CDP: Mac → Chrome.app, иначе docker pw-min
-go test ./... -short       # без live Chrome
-# GREEDY_CDP=http://127.0.0.1:9222 go test ./... -p 1
-# CHROME_BIN=/path/to/chrome go test ./... -p 1
-go run ./cmd/greedy version
-go run ./cmd/greedy help
-go run ./cmd/greedy search --path testdata/search p1-search-marker-a1b2
-go run ./cmd/greedy validate crystals/login.example.json
-go run ./cmd/greedy crystallize --hits 3 --days 2 --pattern "login valid credentials"
-go run ./cmd/greedy crystallize --hits 3 --days 2 --pattern "login valid credentials" \
-  --trace testdata/trace/login.trace --out /tmp/login.json \
-  --id login --as-id "Пользователь может войти с валидными credentials"
-MILL=../../autotests-ai-multistack-home/autotests-ai-multistack-app/tests/go/tests-go-cdp/crystals
-go run ./cmd/greedy validate "$MILL/login.json"
-# canonical clocks (held CDP; par/waves first; cell warmup discarded; quote median_ms):
-# go run ./cmd/greedy bench --cdp "$GREEDY_CDP" --base-url URL --seq 1,5,10,25 --repeat 10 --mode none "$MILL/login.json"
-# GREEDY_BENCH_PARALLEL=5 GREEDY_BENCH_WAVES=2,5 GREEDY_BENCH_REPEAT=10 scripts/bench-matrix.sh
-go run ./cmd/greedy observe --id login --eligible --pw-green 3
-go run ./cmd/greedy diff crystals/login.example.json "$MILL/login.json"
-go run ./cmd/greedy approve --proposed "$MILL/login.json" --out "$MILL/login.json" \
-  --live "$MILL/login.json" --pw-green 3 --eligible
-# mill (etalon clone, exec this binary — not import internal/cdp)
-cd ../../autotests-ai-multistack-home/autotests-ai-multistack-app/tests/go/tests-go-cdp && go test
+```
+Playwright test → green run trace.zip → greedy crystallize → login.json (IR)
+                                                             ↓
+TestOps approve                                    greedy run → hot Chrome (CDP)
 ```
 
-`crystallize` без `--trace` — только гейты. `--trace` — Playwright `trace.zip` / `.trace` (успешный прогон) → IR v1, не AST `.spec.ts`. Live IR в git — mill `tests/go/tests-go-cdp/crystals/` (клетка на `/stack/`). Guru `crystals/` — только `login.example.json` (не Live). JSON в mill — после ручного OK.
+A crystal is a JSON file — steps and selectors captured from a passing trace, not parsed out of test code. The replay runtime is a thin CDP interpreter inside this binary: no chromedp, no playwright-go, no model in the loop.
 
-`observe`: 3 зелёных **PW**-launch → `pending_review` (allowlist auto-Live только `login*`). Уже `live` и fingerprint не сменился → `live`, **без PATCH**. Починка spec / новый fingerprint / падение Live → снова review. Поле TestOps `crystal_status` **не** `from_test_result`. Eligibility — tag `crystal`, не лейбл прогона. Кристалл не `@Layer("manual")`.
+## Install
 
-`approve` = diff IR + PATCH TestOps + файл JSON (не галочка в TMS). Кейс на workflow **greedy.guru crystals** (Active / Outdated), не «Автоматизированные тесты». Тонкий PATCH в tms-automator: `scripts/patch_crystal_status.py` (не bootstrap репо). Id кейсов mill-кристаллов: [`testdata/testops-cases.json`](testdata/testops-cases.json) (проект [5366](https://allure.qa.guru/project/5366/test-cases)).
-
-`run` — к уже живому Chrome DevTools HTTP (`--cdp` или lease, флаг `--remote-allow-origins=*`). Live-тесты поднимают **PW min** (`qaguru/playwright-chromium:1.61.1-min`): Chromium из образа + CDP, не Playwright WS `:3000`, не WebDriver chrome-min. WD-образ — если будем кристаллизовать Selenium. Фикстура — `host.docker.internal`. Override: `CHROME_BIN`, `GREEDY_PW_MIN_IMAGE`, `GREEDY_CDP` (явный URL, не хардкод в коде). Без `--cdp`: `GREEDY_CDP` (только N=1), иначе N× `POST /pool/lease {protocol:cdp}` (`GREEDY_POOL`), иначе sidecar compose (N=1). `--parallel N` = N CDP, не вкладки. `--mode none`: Allure generate не на стене. Цифра на лендинге — **1×** `site/bench.json` (`testdata/app-live`, ~90 ms). Box1 N=5 на SPA — другая шкала (~300 ms стена), не в `bench.json`.
-
-`bench` — один протокол для листа. Сессии держатся до конца команды. Warmup команды и **первый прогон каждой клетки** выбрасываются. par/waves **до** очереди (простой Chrome не остывает). JSON: `best_ms` (min), `median_ms`, `runs_ms`. **Цитата и пропорции — медиана**, не min разных клеток. `--repeat` по умолчанию 3; лист Mac vs [selenoid.qa.guru](https://selenoid.qa.guru) — `--repeat 10`. Часы: `Run` / `RunParallel` на уже открытом CDP — **без Dial, без park демона, без клетки Jenkins**. `--seq 1,5,10,25` — очередь на одном Client. `--parallel 5` — одна волна на 5 Client (стена = max). `--waves 2,5` — 2 или 5 таких волн **на тех же** Client, без нового lease. Не смешивать с `POST /run` (там park между прогонами). SPA `/stack/` и `testdata/app-live` — разные строки. Лендинг остаётся **1×** `site/bench.json` (~90 ms), не эта матрица.
+Download a binary from [Releases](https://github.com/svasenkov/greedy-guru/releases) (darwin/linux, amd64/arm64), or build from source:
 
 ```bash
-# лист (SPA), 5 CDP из пула; на Box1 сначала отпустить hot-cdp-daemon
-# GREEDY_RESET=on (default): без park между Run форма логина пропадает. off — только daemon /run.
-# IR: mill tests-go-cdp/crystals/login.json (not guru/crystals)
-GREEDY_POOL=http://selenoid-pool:9090 GREEDY_CDP_FALLBACK=off \
-  greedy bench --base-url https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/ \
-  --seq 1,5,10,25 --parallel 5 --waves 2,5 --repeat 10 --mode none \
-  tests/go/tests-go-cdp/crystals/login.json
+git clone https://github.com/svasenkov/greedy-guru.git && cd greedy-guru
+go build ./cmd/greedy
+# or: go install github.com/svasenkov/greedy-guru/cmd/greedy@latest
 ```
 
-Hot CDP — **5 слотов** selenoid-pool (`pool-hot-cdp-min-1`…`5`), live на Box1 / [selenoid.qa.guru](https://selenoid.qa.guru) (hot **8/8**). Не отдельный пул. Пулы: cold / warm / hot. Тот же `-min` Chromium, DevTools, не `:3000`. SSOT: `projects/selenoid-home/selenoid-pool/`. Sidecar [`docker-compose.hot-cdp.yml`](docker-compose.hot-cdp.yml) — fallback **1×** на 16443 (не вместе с `hot-cdp-min-1`). Не стенд `ensure.py`. DevTools URL не в Материалы чата.
+## Commands
 
-Не chromedp, не Node. Ячейка TS Playwright — другой чат. Mill: etalon `tests/go/tests-go-cdp` (`role: mill`, `layers: [crystal]`, `in_stack: true`) — **SSOT live** `crystals/*.json` + `exec greedy run`, не `import internal/cdp`.
+| Command | What it does |
+|---------|--------------|
+| `greedy validate <crystal.json>` | Check a crystal against `schema/crystal.v1.json` |
+| `greedy search [--path DIR] <query>` | `rg` wrapper |
+| `greedy crystallize --hits N --days N --pattern TEXT [--trace trace.zip --id ID --as-id TITLE --out FILE]` | Gate a repeated task (hits/days/sessions/faker); with `--trace`, cut IR from a green Playwright trace |
+| `greedy run --cdp URL --base-url URL [--parallel N] <crystal.json>` | Replay on an already-live Chrome over CDP |
+| `greedy bench --base-url URL [--seq 1,5,10,25] [--parallel N] [--waves W] [--repeat R] <crystal.json>` | Held-CDP benchmark: seq queue on one client, par/waves across N clients |
+| `greedy observe` / `diff` / `approve` | Crystal lifecycle in Allure TestOps (`crystal_status` field, `pending_review → live`) |
 
-Хабы: nested clone `../greedy-token/` остаётся прототипом Cursor. Этот каталог — продукт домена.
+JSON on stdout; exit codes `0` ok / `1` fail / `2` usage. Full contract: `greedy help`.
+
+## IR v1
+
+Six ops: `navigate`, `wait`, `fill`, `click`, `text`, `park`. Selectors are what resolved in the trace (`data-testid`), not `getByRole`. Schema: [`schema/crystal.v1.json`](schema/crystal.v1.json); example: [`crystals/login.example.json`](crystals/login.example.json).
+
+```json
+{ "op": "fill", "selector": "[data-testid=login-input]", "value": "user1" }
+```
+
+## Speed — measured, not a slogan
+
+One login crystal on one hot Chrome, static fixture: **~90 ms** wall ([site/bench.json](site/bench.json)). The full matrix (queue depth × parallelism, Mac vs the Selenoid farm) is on the [landing](https://greedy.guru) and in [`site/bench-matrix.json`](site/bench-matrix.json) — reproduced by `scripts/bench-matrix.py` + `greedy bench --repeat 10`.
+
+What the numbers are *not*: not Jenkins stage time, not `POST /run` daemon time, not "Go is 10× faster than X". Held CDP, `--mode none` (no Allure on the clock), warmup discarded, quote = `median_ms`.
+
+## What it is not
+
+- Not a port of [greedy-token](https://github.com/svasenkov/greedy-token) (Python MCP router) — that stays Python.
+- Not an MCP server. Programmatic API is this CLI's JSON stdout.
+- Not a test writer — humans/Playwright write tests; greedy only freezes green runs.
+- Not a page-object runtime — no living Go scenarios, no chromedp, no go-playwright.
+
+## Development
+
+```bash
+go test ./... -short        # unit tier, no Chrome
+go test ./... -p 1          # live: boots Chrome.app (macOS), google-chrome (CI), or docker pw-min
+go test ./internal/cli -update   # regenerate testdata/golden/*
+```
+
+Live overrides: `CHROME_BIN`, `GREEDY_CDP`, `GREEDY_POOL`, `GREEDY_PW_MIN_IMAGE`. The TestOps lifecycle (`observe`/`approve`, `allure_id`) is used by a private test mill; the CLI itself only needs a CDP endpoint.
+
+## Releases
+
+Tags `v*` → GoReleaser → GitHub Release with binaries + checksums. Version stamp is injected at build time (`-X …/internal/cli.Version`); `greedy version` prints it.

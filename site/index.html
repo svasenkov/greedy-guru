@@ -66,6 +66,22 @@
     .bench .n { font-size: 2rem; letter-spacing: -0.04em; color: var(--text); margin: 0.2rem 0 0; }
     .bench .meta { font-size: 0.82rem; color: var(--muted); margin: 0.4rem 0 0; }
     .bench .note { font-size: 0.87rem; color: var(--muted); margin: 0.9rem 0 0; }
+    .matrix { overflow-x: auto; margin: 1.25rem 0; }
+    table.m {
+      border-collapse: collapse; width: 100%; min-width: 44rem;
+      font-size: 0.82rem; background: var(--card);
+      border: 1px solid var(--line); border-radius: 8px;
+    }
+    table.m th, table.m td {
+      padding: 0.45rem 0.7rem; text-align: right;
+      border-bottom: 1px solid var(--line); white-space: nowrap;
+    }
+    table.m th { color: var(--muted); font-weight: 500; font-size: 0.75rem; white-space: normal; min-width: 5.5rem; }
+    table.m th:first-child, table.m td:first-child,
+    table.m th:nth-child(2), table.m td:nth-child(2) { text-align: left; }
+    table.m td { color: var(--body); font-variant-numeric: tabular-nums; }
+    table.m tr:last-child td { border-bottom: none; }
+    table.m td.dim { color: var(--muted); }
     .foot {
       margin: 2.75rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--line);
       font-size: 0.87rem; color: var(--muted);
@@ -143,20 +159,31 @@
 }</pre>
   <p class="cap">Фрагмент кристалла. Живые лежат рядом с тестами — <a href="https://github.com/autotests-ai/autotests-ai-multistack-app/tree/main/tests/go/tests-go-cdp">tests-go-cdp</a>.</p>
 
-  <h2>Кто решает, что кристалл рабочий</h2>
-  <p>Три зелёных прогона Playwright подряд — и кейс в <a href="https://allure.qa.guru/project/5366/test-cases">TestOps</a> просится на ревью. На ревью смотрят diff, дальше <code>approve</code> проставляет статус в TestOps и коммитит JSON. Без ревью в Live уезжает только логин (<a href="https://allure.qa.guru/project/5366/test-cases/50707">кейс 50707</a>); поправили тест — кристалл возвращается на ревью.</p>
-
+  <h2>Замер</h2>
   <section class="bench" id="bench">
-    <p class="tag">Замер</p>
+    <p class="tag">Один прогон</p>
     <p class="n" id="bench-wall">login · 90 ms · 0.09 s</p>
     <p class="meta" id="bench-meta">2026-08-27 · tests-go-cdp/crystals/login.json · testdata/app-live · 1 hot Chrome · mode none</p>
-    <p class="note">Один прогон логина на одном горячем Chrome. На ферме <a href="https://jenkins.qa.guru/job/autotests-ai-multistack-tests-pipeline-go-cdp-hot-pool/"><code>go-cdp-hot-pool</code></a> к нему добавляются logout, register и home — там своя шкала, сотни миллисекунд, складывать 90×4 не надо.</p>
+    <p class="note">Один прогон логина на одном горячем Chrome, статичная страница. Не Jenkins и не ферма — для них ниже своя таблица.</p>
   </section>
+
+  <h2>Матрица: Mac против фермы</h2>
+  <p>Тот же кристалл логина, но на живой SPA-странице. Слева — медиана десяти прогонов, под ней лучший. Столбцы: очередь на одном Chrome и параллель на пяти.</p>
+  <div class="matrix" id="matrix-wrap">
+    <table class="m" id="matrix" hidden>
+      <thead><tr id="matrix-head"></tr></thead>
+      <tbody id="matrix-body"></tbody>
+    </table>
+  </div>
+  <p class="cap" id="matrix-meta">Протокол: <code>greedy bench --repeat 10</code> — warmup и первый прогон клетки выбрасываются. Сырые прогоны — в <a href="bench-matrix.json">bench-matrix.json</a>.</p>
+
+  <h2>Кто решает, что кристалл рабочий</h2>
+  <p>Три зелёных прогона Playwright подряд — и кейс в <a href="https://allure.qa.guru/project/5366/test-cases">TestOps</a> просится на ревью. На ревью смотрят diff, дальше <code>approve</code> проставляет статус в TestOps и коммитит JSON. Без ревью в Live уезжает только логин (<a href="https://allure.qa.guru/project/5366/test-cases/50707">кейс 50707</a>); поправили тест — кристалл возвращается на ревью.</p>
   <pre>greedy run --mode none \
   --cdp "$GREEDY_CDP" --base-url URL tests/go/tests-go-cdp/crystals/login.json</pre>
   <p class="cap">Рядом с <code>run</code> живут <code>crystallize</code>, <code>validate</code>, <code>diff</code>, <code>approve</code> и <code>bench</code>. CDP внутри свой и тонкий: ни chromedp, ни playwright-go.</p>
 
-  <p class="foot">Тесты и кристаллы — <a href="https://github.com/autotests-ai/autotests-ai-multistack-app">GitHub</a> · прогоны — <a href="https://jenkins.qa.guru/">Jenkins</a> · слоты Chrome — <a href="https://selenoid.qa.guru/">Selenoid</a> · статусы — <a href="https://allure.qa.guru/project/5366/test-cases">TestOps</a></p>
+  <p class="foot">Код — <a href="https://github.com/svasenkov/greedy-guru">github.com/svasenkov/greedy-guru</a> · тесты и кристаллы — <a href="https://github.com/autotests-ai/autotests-ai-multistack-app">multistack</a> · прогоны — <a href="https://jenkins.qa.guru/">Jenkins</a> · слоты Chrome — <a href="https://selenoid.qa.guru/">Selenoid</a> · статусы — <a href="https://allure.qa.guru/project/5366/test-cases">TestOps</a></p>
 
   <script>
     fetch("bench.json").then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (b) {
@@ -170,6 +197,56 @@
       if (b.mode) bits.push("mode " + b.mode);
       document.getElementById("bench-meta").textContent = bits.join(" · ");
       document.getElementById("flow-ms").textContent = b.wall_ms + " мс";
+    }).catch(function () {});
+
+    fetch("bench-matrix.json").then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (m) {
+      var order = { seq: 0, par: 1, waves: 2 };
+      var keySet = {};
+      Object.keys(m.cells || {}).forEach(function (env) {
+        Object.keys(m.cells[env]).forEach(function (k) { keySet[k] = true; });
+      });
+      var cols = Object.keys(keySet).sort(function (a, b) {
+        var ka = a.split(":"), kb = b.split(":");
+        return (order[ka[0]] - order[kb[0]]) || (ka[1] - kb[1]);
+      });
+      var par = 0;
+      (m.envs || []).forEach(function (e) { par = Math.max(par, e.parallel || 0); });
+      function colLabel(k) {
+        var p = k.split(":"), n = +p[1];
+        if (p[0] === "seq") return n === 1 ? "1 тест" : n + " тестов в 1 контейнере";
+        if (p[0] === "par") return n + " тестов по 1 в контейнере, " + n + " контейнеров";
+        return (n * par) + " тестов в " + par + " контейнерах, по " + n + " в одном";
+      }
+      var head = document.getElementById("matrix-head");
+      ["среда", "замер"].concat(cols.map(colLabel)).forEach(function (t) {
+        var th = document.createElement("th"); th.textContent = t; head.appendChild(th);
+      });
+      var body = document.getElementById("matrix-body");
+      (m.envs || []).forEach(function (env) {
+        var cells = (m.cells || {})[env.id] || {};
+        [["медиана", "median_ms", false], ["лучший", "best_ms", true]].forEach(function (row) {
+          var tr = document.createElement("tr");
+          var tdEnv = document.createElement("td"); tdEnv.textContent = row[0] === "медиана" ? (env.label || env.id) : "";
+          var tdKind = document.createElement("td"); tdKind.textContent = row[0]; tdKind.className = "dim";
+          tr.appendChild(tdEnv); tr.appendChild(tdKind);
+          cols.forEach(function (c) {
+            var td = document.createElement("td");
+            var cell = cells[c];
+            td.textContent = cell && cell[row[1]] != null ? cell[row[1]] : "—";
+            if (row[2]) td.className = "dim";
+            tr.appendChild(td);
+          });
+          body.appendChild(tr);
+        });
+      });
+      document.getElementById("matrix").hidden = false;
+      var meta = document.getElementById("matrix-meta");
+      meta.innerHTML = "";
+      meta.appendChild(document.createTextNode(
+        (m.measured_at || "") + " · " + (m.crystal || "") + " · " + (m.base_url || "") +
+        " · greedy bench --repeat " + (m.repeat || "?") + " — warmup и первый прогон клетки выброшены. Сырые прогоны: "));
+      var a = document.createElement("a"); a.href = "bench-matrix.json"; a.textContent = "bench-matrix.json";
+      meta.appendChild(a); meta.appendChild(document.createTextNode("."));
     }).catch(function () {});
   </script>
 </body>

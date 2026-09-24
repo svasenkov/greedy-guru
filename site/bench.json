@@ -2,22 +2,70 @@
   "allure_generate": false,
   "app": "testdata/app-live",
   "cdp": "1 hot Chrome",
+  "cdp_commands": 11,
   "crystal": "tests-go-cdp/crystals/login.json",
   "id": "login",
-  "measured_at": "2026-08-27",
+  "measured_at": "2026-09-24",
   "mode": "none",
   "ok": true,
   "ok_count": 1,
   "parallel": 1,
+  "round_trips": 11,
   "runs": 1,
   "steps": 7,
-  "wall_ms": 90,
+  "wall_ms": 41,
   "workers": [
     {
+      "cdp_commands": 11,
+      "cdp_methods": {
+        "Network.clearBrowserCookies": 1,
+        "Network.enable": 1,
+        "Page.navigate": 1,
+        "Runtime.evaluate": 7,
+        "Storage.clearDataForOrigin": 1
+      },
       "id": "login",
       "ok": true,
+      "round_trips": 11,
+      "step_ms": [
+        {
+          "i": 0,
+          "ms": 24,
+          "op": "navigate"
+        },
+        {
+          "i": 1,
+          "ms": 1,
+          "op": "wait"
+        },
+        {
+          "i": 2,
+          "ms": 0,
+          "op": "fill"
+        },
+        {
+          "i": 3,
+          "ms": 2,
+          "op": "fill"
+        },
+        {
+          "i": 4,
+          "ms": 0,
+          "op": "click"
+        },
+        {
+          "i": 5,
+          "ms": 10,
+          "op": "wait"
+        },
+        {
+          "i": 6,
+          "ms": 1,
+          "op": "text"
+        }
+      ],
       "steps": 7,
-      "wall_ms": 90
+      "wall_ms": 41
     }
   ]
 }

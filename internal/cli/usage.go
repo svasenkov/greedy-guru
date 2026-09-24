@@ -1,6 +1,8 @@
 package cli
 
-const Version = "0.6.0"
+// Version is the CLI version stamp. Release builds override it via
+// -ldflags "-X greedy.guru/greedy/internal/cli.Version=vX.Y.Z" (GoReleaser).
+var Version = "0.6.0"
 
 const ExitOK = 0
 const ExitFail = 1

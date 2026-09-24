@@ -1,0 +1,50 @@
+version: 2
+
+project_name: greedy
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: greedy
+    main: ./cmd/greedy
+    binary: greedy
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X greedy.guru/greedy/internal/cli.Version={{.Version}}
+
+archives:
+  - id: greedy
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - schema/crystal.v1.json
+      - crystals/login.example.json
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs"
+      - "^test"
+      - "^chore"
+      - "Merge pull request"
+
+release:
+  name_template: "v{{ .Version }}"
+  footer: |
+    `greedy run` replays a crystal (JSON IR) on an already-live Chrome over CDP. No Node, no chromedp.
+    Site: https://greedy.guru · IR schema: `schema/crystal.v1.json`

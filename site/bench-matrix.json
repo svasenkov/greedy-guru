@@ -1,0 +1,280 @@
+{
+  "clock": "held CDP, Run wall only: no Dial, no daemon park. par/waves before seq. global warmup + first of each cell discarded. best_ms=min of --repeat. seq = same Client. par/waves = same N Clients.",
+  "crystal": "tests-go-cdp/crystals/login.json",
+  "base_url": "https://autotests.ai/stack/backend-java-spring/frontend-typescript-react/",
+  "repeat": 10,
+  "reset": "on",
+  "envs": [
+    {
+      "id": "mac",
+      "label": "Mac",
+      "note": "5 Chrome.app headless",
+      "parallel": 5
+    },
+    {
+      "id": "selenoid",
+      "label": "selenoid.qa.guru",
+      "note": "hot-cdp-min-1…5",
+      "parallel": 5
+    }
+  ],
+  "cells": {
+    "mac": {
+      "seq:1": {
+        "n": 1,
+        "best_ms": 232,
+        "median_ms": 261,
+        "max_ms": 377,
+        "runs_ms": [
+          353,
+          245,
+          242,
+          276,
+          251,
+          357,
+          377,
+          237,
+          261,
+          232
+        ]
+      },
+      "seq:5": {
+        "n": 5,
+        "best_ms": 1205,
+        "median_ms": 1298,
+        "max_ms": 1401,
+        "runs_ms": [
+          1329,
+          1260,
+          1205,
+          1271,
+          1260,
+          1280,
+          1298,
+          1311,
+          1329,
+          1401
+        ]
+      },
+      "seq:10": {
+        "n": 10,
+        "best_ms": 2497,
+        "median_ms": 2652,
+        "max_ms": 2712,
+        "runs_ms": [
+          2599,
+          2497,
+          2697,
+          2652,
+          2712,
+          2624,
+          2643,
+          2660,
+          2618,
+          2660
+        ]
+      },
+      "seq:25": {
+        "n": 25,
+        "best_ms": 6097,
+        "median_ms": 6401,
+        "max_ms": 6619,
+        "runs_ms": [
+          6252,
+          6427,
+          6370,
+          6412,
+          6269,
+          6401,
+          6619,
+          6523,
+          6120,
+          6097
+        ]
+      },
+      "par:5": {
+        "n": 5,
+        "best_ms": 247,
+        "median_ms": 268,
+        "max_ms": 369,
+        "runs_ms": [
+          356,
+          255,
+          247,
+          289,
+          268,
+          369,
+          257,
+          259,
+          264,
+          294
+        ]
+      },
+      "waves:2": {
+        "n": 2,
+        "best_ms": 544,
+        "median_ms": 659,
+        "max_ms": 799,
+        "runs_ms": [
+          544,
+          608,
+          799,
+          657,
+          591,
+          754,
+          659,
+          649,
+          783,
+          791
+        ]
+      },
+      "waves:5": {
+        "n": 5,
+        "best_ms": 1364,
+        "median_ms": 1663,
+        "max_ms": 1851,
+        "runs_ms": [
+          1364,
+          1796,
+          1365,
+          1471,
+          1851,
+          1663,
+          1520,
+          1828,
+          1534,
+          1789
+        ]
+      }
+    },
+    "selenoid": {
+      "seq:1": {
+        "n": 1,
+        "best_ms": 167,
+        "median_ms": 229,
+        "max_ms": 309,
+        "runs_ms": [
+          309,
+          189,
+          277,
+          229,
+          281,
+          234,
+          175,
+          177,
+          167,
+          194
+        ]
+      },
+      "seq:5": {
+        "n": 5,
+        "best_ms": 1002,
+        "median_ms": 1126,
+        "max_ms": 1241,
+        "runs_ms": [
+          1083,
+          1115,
+          1241,
+          1035,
+          1136,
+          1105,
+          1126,
+          1002,
+          1131,
+          1147
+        ]
+      },
+      "seq:10": {
+        "n": 10,
+        "best_ms": 2052,
+        "median_ms": 2193,
+        "max_ms": 2447,
+        "runs_ms": [
+          2052,
+          2113,
+          2239,
+          2447,
+          2075,
+          2182,
+          2195,
+          2164,
+          2226,
+          2193
+        ]
+      },
+      "seq:25": {
+        "n": 25,
+        "best_ms": 5290,
+        "median_ms": 5484,
+        "max_ms": 5822,
+        "runs_ms": [
+          5484,
+          5375,
+          5520,
+          5290,
+          5600,
+          5395,
+          5822,
+          5508,
+          5422,
+          5448
+        ]
+      },
+      "par:5": {
+        "n": 5,
+        "best_ms": 267,
+        "median_ms": 302,
+        "max_ms": 417,
+        "runs_ms": [
+          282,
+          284,
+          393,
+          347,
+          335,
+          277,
+          302,
+          281,
+          417,
+          267
+        ]
+      },
+      "waves:2": {
+        "n": 2,
+        "best_ms": 525,
+        "median_ms": 579,
+        "max_ms": 649,
+        "runs_ms": [
+          591,
+          649,
+          636,
+          525,
+          568,
+          579,
+          540,
+          627,
+          556,
+          537
+        ]
+      },
+      "waves:5": {
+        "n": 5,
+        "best_ms": 1363,
+        "median_ms": 1537,
+        "max_ms": 2082,
+        "runs_ms": [
+          1450,
+          2082,
+          1466,
+          1482,
+          1518,
+          1610,
+          1537,
+          2020,
+          1363,
+          1579
+        ]
+      }
+    }
+  },
+  "measured_at": "2026-09-24"
+}

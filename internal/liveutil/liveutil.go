@@ -125,6 +125,11 @@ func ChromeBin() string {
 			return p
 		}
 	}
+	for _, name := range []string{"google-chrome", "google-chrome-stable", "chromium", "chromium-browser"} {
+		if p, err := exec.LookPath(name); err == nil {
+			return p
+		}
+	}
 	return ""
 }
 

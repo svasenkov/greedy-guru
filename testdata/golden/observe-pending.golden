@@ -1,0 +1,1 @@
+{"ok":true,"crystal_status":"pending_review","prev":"none","allowlisted":false,"from_test_result":false,"reasons":["3 PW green → pending_review"],"patch":{"method":"PATCH","path":"/api/rs/testcase/{id}","body":{"customFields":[{"customField":{"name":"crystal_status"},"name":"pending_review"}]}}}

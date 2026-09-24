@@ -1,0 +1,1 @@
+{"ok":true,"crystal_status":"live","prev":"none","auto_live":true,"allowlisted":true,"from_test_result":false,"reasons":["allowlist login auto-Live"],"patch":{"method":"PATCH","path":"/api/rs/testcase/{id}","body":{"customFields":[{"customField":{"name":"crystal_status"},"name":"live"}]}}}
