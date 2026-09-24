@@ -203,15 +203,31 @@ func startHostChrome(t testing.TB, ctx context.Context) string {
 	}
 	port := ln.Addr().(*net.TCPAddr).Port
 	_ = ln.Close()
-	dir := t.TempDir()
+	// Own tempdir, not t.TempDir(): Chrome's child processes can still be
+	// writing the profile when test cleanup runs, and RemoveAll then flakes
+	// with "directory not empty". Kill the whole process group, wait, retry.
+	dir, err := os.MkdirTemp("", "greedy-chrome-")
+	if err != nil {
+		t.Fatal(err)
+	}
 	cmd := exec.CommandContext(ctx, bin, append(chromeFlags(dir, port, "127.0.0.1"), "about:blank")...)
 	cmd.Env = append(os.Environ(), "HOME="+dir)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	if err := cmd.Start(); err != nil {
+		_ = os.RemoveAll(dir)
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_ = cmd.Process.Kill()
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+			_ = cmd.Process.Kill()
+		}
 		_, _ = cmd.Process.Wait()
+		for i := 0; i < 40; i++ {
+			if err := os.RemoveAll(dir); err == nil {
+				return
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
 	})
 	url := "http://127.0.0.1:" + strconv.Itoa(port)
 	waitCtx, cancel := context.WithTimeout(context.Background(), hostDebugWait)
