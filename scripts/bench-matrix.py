@@ -154,7 +154,7 @@ def sheet_footer(matrix: dict) -> list[list]:
         ["Лист", "Лучший = min из засчитанных. Медиана рядом: пропорции читать по ней, не по min разных клеток."],
         ["Протокол", f"greedy bench --repeat {matrix.get('repeat', '?')}. Warmup команды + первый прогон клетки выкинуты. par/waves до очереди. GREEDY_RESET={matrix.get('reset', 'on')}. Неудачный sample ретраится до 3 раз, в историю не пишется."],
         ["Дата", f"{matrix.get('measured_at', '?')}. {matrix.get('crystal', '')} · {matrix.get('base_url', '')} · --repeat {matrix.get('repeat', '?')}"],
-        ["История", "вкладка История: все прогоны каждой клетки (runs_ms)."],
+        ["История", "вкладка История: append-only лог засчитанных прогонов (date, env, column, run_i, wall_ms)."],
         ["Не путать", "Пин лендинга = testdata/app-live. Jenkins Test = 1× POST /run."],
     ]
 
@@ -197,6 +197,30 @@ def _find_sheets_script() -> Path | None:
     return p if p.is_file() else None
 
 
+HISTORY_HEADER = ["date", "env", "column", "run_i", "wall_ms"]
+
+
+def _sheets_call(script: Path, action: str, alias: str, rng: str,
+                 values: list[list] | None, dry_run: bool) -> dict:
+    cmd = [
+        sys.executable, str(script), action,
+        "--alias", alias, "--range", rng,
+    ]
+    if values is not None:
+        cmd += ["--values-json", json.dumps(values, ensure_ascii=False)]
+    if dry_run:
+        cmd.append("--dry-run")
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        payload = json.loads(proc.stdout.strip())
+    except json.JSONDecodeError:
+        payload = {"ok": False, "raw": proc.stdout.strip()[:500]}
+    if proc.returncode != 0 or not payload.get("ok"):
+        payload.setdefault("ok", False)
+        payload["stderr"] = proc.stderr.strip()[:500]
+    return payload
+
+
 def cmd_sync_sheets(args: argparse.Namespace) -> int:
     matrix = load_matrix(Path(args.json))
     script = _find_sheets_script()
@@ -209,30 +233,34 @@ def cmd_sync_sheets(args: argparse.Namespace) -> int:
         return 1
     cols = columns_of(matrix)
     width = max(len(cols) + 2, 10)
-    jobs = [
-        ("Sheet1", _pad(sheet_rows(matrix) + sheet_footer(matrix), width, 30)),
-        ("История", _pad(history_rows(matrix), 4, 600)),
+    # Sheet1 is the rendered matrix: full overwrite keeps it deterministic.
+    jobs: list[tuple[str, str, str, list[list] | None]] = [
+        ("Sheet1", "update", "A1", _pad(sheet_rows(matrix) + sheet_footer(matrix), width, 30)),
     ]
+    # История is an append-only run log: migrate once to the dated format,
+    # then append only rows the tab does not already have.
+    hist = history_rows(matrix)
+    existing = _sheets_call(script, "get", args.alias, f"'История'!A1:E{len(hist) + 1000}",
+                            None, args.dry_run)
+    existing_rows = existing.get("values") or []
+    if not existing_rows or list(map(str, existing_rows[0])) != HISTORY_HEADER:
+        jobs.append(("История", "update", "A1", _pad(hist, len(HISTORY_HEADER), 600)))
+    else:
+        known = {tuple(map(str, r)) for r in existing_rows}
+        new_rows = [r for r in hist[1:] if tuple(map(str, r)) not in known]
+        if new_rows:
+            jobs.append(("История", "append", "A1", new_rows))
+        else:
+            jobs.append(("История", "skip", "A1", None))
+
     results = []
-    for tab, values in jobs:
-        rng = f"'{tab}'!A1"
-        cmd = [
-            sys.executable, str(script), "update",
-            "--alias", args.alias,
-            "--range", rng,
-            "--values-json", json.dumps(values, ensure_ascii=False),
-        ]
-        if args.dry_run:
-            cmd.append("--dry-run")
-        proc = subprocess.run(cmd, capture_output=True, text=True)
-        out = proc.stdout.strip()
-        try:
-            payload = json.loads(out)
-        except json.JSONDecodeError:
-            payload = {"ok": False, "raw": out[:500]}
+    for tab, action, rng, values in jobs:
+        if action == "skip":
+            results.append({"ok": True, "action": "skip", "tab": tab, "reason": "no new rows"})
+            continue
+        payload = _sheets_call(script, action, args.alias, f"'{tab}'!{rng}", values, args.dry_run)
         payload["tab"] = tab
-        if proc.returncode != 0 or not payload.get("ok"):
-            payload["stderr"] = proc.stderr.strip()[:500]
+        if not payload.get("ok"):
             print(json.dumps({"ok": False, "results": results + [payload]}, ensure_ascii=False))
             return 1
         results.append(payload)
@@ -242,13 +270,14 @@ def cmd_sync_sheets(args: argparse.Namespace) -> int:
 
 def history_rows(matrix: dict) -> list[list]:
     cols = columns_of(matrix)
-    rows = [["env", "column", "run_i", "wall_ms"]]
+    date = matrix.get("measured_at") or ""
+    rows = [HISTORY_HEADER]
     for env in matrix.get("envs", []):
         cells = matrix.get("cells", {}).get(env["id"], {})
         for c in cols:
             runs = cells.get(c, {}).get("runs_ms") or []
             for i, ms in enumerate(runs, 1):
-                rows.append([env.get("label") or env["id"], c, i, ms])
+                rows.append([date, env.get("label") or env["id"], c, i, ms])
     return rows
 
 
