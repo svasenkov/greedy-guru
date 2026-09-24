@@ -11,7 +11,7 @@
 | Фаза | `10.greedy-guru` ✓ · mill [`greedy-guru-mill`](../../../docs/plans/greedy-guru-mill.md) ✓ (не 11) · mill — колонка crystal на `/stack/` |
 
 ```bash
-cd projects/greedy-token-home/greedy-guru
+cd projects/greedy-guru-home/greedy-guru
 go test ./... -p 1         # live CDP: Mac → Chrome.app, иначе docker pw-min
 go test ./... -short       # без live Chrome
 # GREEDY_CDP=http://127.0.0.1:9222 go test ./... -p 1
