@@ -118,7 +118,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         }
     )
     matrix["envs"] = envs
-    matrix.setdefault("cells", {})[args.env] = cells
+    # merge per cell so partial re-runs keep the rest of the matrix
+    matrix.setdefault("cells", {}).setdefault(args.env, {}).update(cells)
 
     out = Path(args.json)
     out.parent.mkdir(parents=True, exist_ok=True)
