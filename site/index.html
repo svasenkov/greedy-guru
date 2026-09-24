@@ -135,8 +135,8 @@
         <text x="270" y="248" fill="#9aa0a6" font-size="12">уже запущен, слот Selenoid</text>
 
         <rect x="496" y="200" width="216" height="66" rx="8" fill="#14181e" stroke="#8ab4f8"/>
-        <text x="514" y="230" fill="#e8eaed" font-size="19" letter-spacing="-0.5" id="flow-ms">90 мс</text>
-        <text x="514" y="250" fill="#9aa0a6" font-size="12">логин, 7 шагов</text>
+        <text x="514" y="230" fill="#e8eaed" font-size="19" letter-spacing="-0.5" id="flow-ms">—</text>
+        <text x="514" y="250" fill="#9aa0a6" font-size="12" id="flow-steps">логин</text>
 
         <path d="M228 233 H246" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw)"/>
         <text x="482" y="238" fill="#5b6270" font-size="16" text-anchor="middle">=</text>
@@ -146,36 +146,44 @@
   </div>
 
   <h2>Что лежит в кристалле</h2>
-  <p>Шаги и селекторы, снятые с трассы, а не разобранные из кода теста. Операций всего шесть: <code>navigate</code>, <code>wait</code>, <code>fill</code>, <code>click</code>, <code>text</code>, <code>park</code> — их хватает на логин, регистрацию и главную.</p>
+  <p>Шаги и селекторы, снятые с трассы, а не разобранные из кода теста. Операций семь: <code>navigate</code>, <code>wait</code>, <code>fill</code>, <code>click</code>, <code>text</code>, <code>park</code>, <code>eval</code> — их хватает на логин, регистрацию и главную. <code>park</code> и <code>eval</code> пишутся руками: <code>park</code> оставляет вкладку на URL, <code>eval</code> — голый <code>Runtime.evaluate</code>; из трассы <code>crystallize</code> их не порождает.</p>
   <pre>{
-  "id": "login", "kind": "cdp", "version": 1,
+  "id": "example",
+  "kind": "cdp",
+  "version": 1,
+  "source": {
+    "lang": "typescript-playwright",
+    "fingerprint": "example-not-live"
+  },
   "steps": [
     { "op": "navigate", "url": "/login" },
+    { "op": "wait", "selector": "[data-testid=login-username]", "timeout_ms": 5000 },
     { "op": "fill", "selector": "[data-testid=login-username]", "value": "user1" },
+    { "op": "fill", "selector": "[data-testid=login-password]", "value": "password1" },
     { "op": "click", "selector": "[data-testid=login-submit]" },
-    { "op": "text", "selector": "[data-testid=home-welcome]",
-      "value": "Welcome, user1!" }
+    { "op": "text", "selector": "[data-testid=home-welcome]", "value": "Welcome, user1!" },
+    { "op": "park", "url": "/login" }
   ]
 }</pre>
-  <p class="cap">Фрагмент кристалла. Живые лежат рядом с тестами — <a href="https://github.com/autotests-ai/autotests-ai-multistack-app/tree/main/tests/go/tests-go-cdp">tests-go-cdp</a>.</p>
+  <p class="cap">Пример из репо целиком — <a href="https://github.com/svasenkov/greedy-guru/blob/main/crystals/login.example.json">crystals/login.example.json</a>. Живые кристаллы лежат рядом с тестами — <a href="https://github.com/autotests-ai/autotests-ai-multistack-app/tree/main/tests/go/tests-go-cdp">tests-go-cdp</a>.</p>
 
   <h2>Замер</h2>
   <section class="bench" id="bench">
     <p class="tag">Один прогон</p>
-    <p class="n" id="bench-wall">login · 90 ms · 0.09 s</p>
-    <p class="meta" id="bench-meta">2026-08-27 · tests-go-cdp/crystals/login.json · testdata/app-live · 1 hot Chrome · mode none</p>
+    <p class="n" id="bench-wall">login · —</p>
+    <p class="meta" id="bench-meta">загрузка bench.json…</p>
     <p class="note">Один прогон логина на одном горячем Chrome, статичная страница. Не Jenkins и не ферма — для них ниже своя таблица.</p>
   </section>
 
   <h2>Матрица: Mac против фермы</h2>
-  <p>Тот же кристалл логина, но на живой SPA-странице. Слева — медиана десяти прогонов, под ней лучший. Столбцы: очередь на одном Chrome и параллель на пяти.</p>
+  <p>Тот же кристалл логина, но на живой SPA-странице. Слева — медиана серии, под ней лучший. Столбцы: очередь на одном Chrome и параллель на слотах пула.</p>
   <div class="matrix" id="matrix-wrap">
     <table class="m" id="matrix" hidden>
       <thead><tr id="matrix-head"></tr></thead>
       <tbody id="matrix-body"></tbody>
     </table>
   </div>
-  <p class="cap" id="matrix-meta">Протокол: <code>greedy bench --repeat 10</code> — warmup и первый прогон клетки выбрасываются. Сырые прогоны — в <a href="bench-matrix.json">bench-matrix.json</a>.</p>
+  <p class="cap" id="matrix-meta">Протокол: <code>greedy bench</code> — warmup и первый прогон клетки выбрасываются. Сырые прогоны — в <a href="bench-matrix.json">bench-matrix.json</a>.</p>
 
   <h2>Три контура запуска</h2>
 
@@ -282,9 +290,9 @@
   </svg>
   </div></div>
 
-  <p class="cap" style="margin:1.75rem 0 0.4rem"><b style="color:var(--text)">3 · Локально.</b> Один Chrome на ноуте против статичной страницы — так снят пин <b>41 ms</b> выше.</p>
+  <p class="cap" style="margin:1.75rem 0 0.4rem"><b style="color:var(--text)">3 · Локально.</b> Один Chrome на ноуте против статичной страницы — так снят пин <b id="pin-ms">…</b> выше.</p>
   <div class="flow"><div class="scroll">
-  <svg viewBox="0 0 720 92" role="img" aria-label="Локально: greedy run, локальный Chrome, результат 41 мс">
+  <svg viewBox="0 0 720 92" role="img" aria-label="Локально: greedy run, локальный Chrome, результат из bench.json">
     <defs>
       <marker id="arw3" viewBox="0 0 9 9" refX="8" refY="4.5" markerWidth="6.5" markerHeight="6.5" orient="auto">
         <path d="M0 0 L9 4.5 L0 9 z" fill="#5b6270"/>
@@ -305,7 +313,7 @@
       <text x="360" y="72" fill="#9aa0a6" font-size="10">Chrome.app · docker pw-min</text>
 
       <rect x="598" y="12" width="80" height="24" fill="#0b0d10"/>
-      <text x="638" y="30" fill="#e8eaed" font-size="16" letter-spacing="-0.3">41 мс</text>
+      <text x="638" y="30" fill="#e8eaed" font-size="16" letter-spacing="-0.3" id="flow3-ms">—</text>
       <text x="638" y="72" fill="#9aa0a6" font-size="10">пин bench.json · app-live</text>
 
       <rect x="206" y="36" width="38" height="16" rx="8" fill="#0b0d10" stroke="#8ab4f8" stroke-dasharray="3 2"/>
@@ -336,7 +344,16 @@
       if (b.mode) bits.push("mode " + b.mode);
       document.getElementById("bench-meta").textContent = bits.join(" · ");
       document.getElementById("flow-ms").textContent = b.wall_ms + " мс";
-    }).catch(function () {});
+      document.getElementById("flow3-ms").textContent = b.wall_ms + " мс";
+      document.getElementById("pin-ms").textContent = b.wall_ms + " ms";
+      if (b.steps != null) {
+        document.getElementById("flow-steps").textContent = "логин, " + b.steps + " шагов";
+      }
+    }).catch(function () {
+      document.getElementById("bench-wall").textContent = "login · нет данных";
+      document.getElementById("bench-meta").textContent = "bench.json недоступен — откройте страницу рядом с JSON";
+      document.getElementById("pin-ms").textContent = "bench.json";
+    });
 
     fetch("bench-matrix.json").then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (m) {
       var order = { seq: 0, par: 1, waves: 2 };

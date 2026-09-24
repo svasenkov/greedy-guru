@@ -14,13 +14,26 @@ A crystal is a JSON file — steps and selectors captured from a passing trace, 
 
 ## Install
 
-Download a binary from [Releases](https://github.com/svasenkov/greedy-guru/releases) (darwin/linux, amd64/arm64), or build from source:
+Download a binary from [Releases](https://github.com/svasenkov/greedy-guru/releases) (darwin/linux, amd64/arm64), or install with Go (vanity import `greedy.guru/greedy`):
 
 ```bash
+go install greedy.guru/greedy/cmd/greedy@latest
+
+# or build from source:
 git clone https://github.com/svasenkov/greedy-guru.git && cd greedy-guru
 go build ./cmd/greedy
-# or: go install github.com/svasenkov/greedy-guru/cmd/greedy@latest
 ```
+
+## Quickstart
+
+```bash
+greedy validate crystals/login.example.json      # offline schema check, no Chrome needed
+greedy crystallize --hits 3 --days 2 --pattern "login" \
+    --trace trace.zip --id login --out login.json # cut IR from a green Playwright trace
+greedy run --cdp http://127.0.0.1:9222 --base-url https://app-under-test/ login.json
+```
+
+`run` never starts Chrome itself — it needs an already-live DevTools endpoint: `--cdp`, `GREEDY_CDP`, a pool lease (`GREEDY_POOL`, `POST /pool/lease`), or the compose sidecar.
 
 ## Commands
 
@@ -37,15 +50,15 @@ JSON on stdout; exit codes `0` ok / `1` fail / `2` usage. Full contract: `greedy
 
 ## IR v1
 
-Six ops: `navigate`, `wait`, `fill`, `click`, `text`, `park`. Selectors are what resolved in the trace (`data-testid`), not `getByRole`. Schema: [`schema/crystal.v1.json`](schema/crystal.v1.json); example: [`crystals/login.example.json`](crystals/login.example.json).
+Seven ops: `navigate`, `wait`, `fill`, `click`, `text`, `park`, `eval`. `crystallize` emits the first five from a trace; `park` (leave the tab on a URL) and `eval` (raw `Runtime.evaluate`) are hand-authored. Selectors are what resolved in the trace (`data-testid`), not `getByRole`. Schema: [`schema/crystal.v1.json`](schema/crystal.v1.json); example: [`crystals/login.example.json`](crystals/login.example.json).
 
 ```json
-{ "op": "fill", "selector": "[data-testid=login-input]", "value": "user1" }
+{ "op": "fill", "selector": "[data-testid=login-username]", "value": "user1" }
 ```
 
 ## Speed — measured, not a slogan
 
-One login crystal on one hot Chrome, static fixture: **~90 ms** wall ([site/bench.json](site/bench.json)). The full matrix (queue depth × parallelism, Mac vs the Selenoid farm) is on the [landing](https://greedy.guru) and in [`site/bench-matrix.json`](site/bench-matrix.json) — reproduced by `scripts/bench-matrix.py` + `greedy bench --repeat 10`.
+One login crystal on one hot Chrome, static fixture: **41 ms** wall ([site/bench.json](site/bench.json) is the pin SSOT, measured 2026-09-24). The full matrix (queue depth × parallelism, Mac vs the Selenoid farm) is on the [landing](https://greedy.guru) and in [`site/bench-matrix.json`](site/bench-matrix.json) — reproduced by `scripts/bench-matrix.py` + `greedy bench`.
 
 What the numbers are *not*: not Jenkins stage time, not `POST /run` daemon time, not "Go is 10× faster than X". Held CDP, `--mode none` (no Allure on the clock), warmup discarded, quote = `median_ms`.
 

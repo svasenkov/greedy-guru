@@ -14,13 +14,26 @@
 
 ## Установка
 
-Бинарник из [Releases](https://github.com/svasenkov/greedy-guru/releases) (darwin/linux, amd64/arm64) или сборка из исходников:
+Бинарник из [Releases](https://github.com/svasenkov/greedy-guru/releases) (darwin/linux, amd64/arm64) или установка через Go (vanity-импорт `greedy.guru/greedy`):
 
 ```bash
+go install greedy.guru/greedy/cmd/greedy@latest
+
+# или сборка из исходников:
 git clone https://github.com/svasenkov/greedy-guru.git && cd greedy-guru
 go build ./cmd/greedy
-# или: go install github.com/svasenkov/greedy-guru/cmd/greedy@latest
 ```
+
+## Быстрый старт
+
+```bash
+greedy validate crystals/login.example.json      # проверка по схеме, Chrome не нужен
+greedy crystallize --hits 3 --days 2 --pattern "login" \
+    --trace trace.zip --id login --out login.json # нарезка IR из зелёной трассы Playwright
+greedy run --cdp http://127.0.0.1:9222 --base-url https://app-under-test/ login.json
+```
+
+`run` не поднимает Chrome сам — нужен уже живой DevTools-эндпоинт: `--cdp`, `GREEDY_CDP`, лиз из пула (`GREEDY_POOL`, `POST /pool/lease`) или сайдкар из compose.
 
 ## Команды
 
@@ -37,15 +50,15 @@ go build ./cmd/greedy
 
 ## IR v1
 
-Шесть операций: `navigate`, `wait`, `fill`, `click`, `text`, `park`. Селекторы — те, что реально отработали в трассе (`data-testid`), не `getByRole`. Схема: [`schema/crystal.v1.json`](schema/crystal.v1.json); пример: [`crystals/login.example.json`](crystals/login.example.json).
+Семь операций: `navigate`, `wait`, `fill`, `click`, `text`, `park`, `eval`. Из трассы `crystallize` порождает первые пять; `park` (оставить вкладку на URL) и `eval` (голый `Runtime.evaluate`) пишутся руками. Селекторы — те, что реально отработали в трассе (`data-testid`), не `getByRole`. Схема: [`schema/crystal.v1.json`](schema/crystal.v1.json); пример: [`crystals/login.example.json`](crystals/login.example.json).
 
 ```json
-{ "op": "fill", "selector": "[data-testid=login-input]", "value": "user1" }
+{ "op": "fill", "selector": "[data-testid=login-username]", "value": "user1" }
 ```
 
 ## Скорость — замер, не слоган
 
-Один кристалл логина на одном горячем Chrome, статичная страница: **~90 ms** wall ([site/bench.json](site/bench.json)). Полная матрица (глубина очереди × параллельность, Mac против фермы Selenoid) — на [лендинге](https://greedy.guru) и в [`site/bench-matrix.json`](site/bench-matrix.json); воспроизводится `scripts/bench-matrix.py` + `greedy bench --repeat 10`.
+Один кристалл логина на одном горячем Chrome, статичная страница: **41 ms** wall ([site/bench.json](site/bench.json) — SSOT пина, замер 2026-09-24). Полная матрица (глубина очереди × параллельность, Mac против фермы Selenoid) — на [лендинге](https://greedy.guru) и в [`site/bench-matrix.json`](site/bench-matrix.json); воспроизводится `scripts/bench-matrix.py` + `greedy bench`.
 
 Чем эти цифры не являются: не временем Jenkins-стейджа, не временем `POST /run` демона, не «Go в 10 раз быстрее X». Удерживаемый CDP, `--mode none` (Allure вне замера), warmup выброшен, в цитату идёт `median_ms`.
 
