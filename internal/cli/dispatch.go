@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -29,7 +30,7 @@ func Dispatch(args []string, stdout, stderr io.Writer) int {
 		_, _ = io.WriteString(stderr, Usage)
 		return ExitOK
 	case "version", "-v", "--version":
-		_, _ = io.WriteString(stdout, "greedy "+Version+"\n")
+		_, _ = io.WriteString(stdout, "greedy "+versionStamp()+"\n")
 		return ExitOK
 	case "search":
 		return cmdSearch(args[1:], stdout)
@@ -52,6 +53,18 @@ func Dispatch(args []string, stdout, stderr io.Writer) int {
 		emit(stdout, map[string]any{"ok": false, "error": "unknown command " + args[0]})
 		return ExitUsage
 	}
+}
+
+// versionStamp reports the ldflags stamp (release builds) or the module
+// version recorded by `go install ...@vX.Y.Z` in build info.
+func versionStamp() string {
+	if Version != "dev" {
+		return Version
+	}
+	if bi, ok := debug.ReadBuildInfo(); ok && bi.Main.Version != "" && bi.Main.Version != "(devel)" {
+		return strings.TrimPrefix(bi.Main.Version, "v")
+	}
+	return Version
 }
 
 func cmdSearch(args []string, stdout io.Writer) int {
