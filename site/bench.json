@@ -13,7 +13,7 @@
   "round_trips": 11,
   "runs": 1,
   "steps": 7,
-  "wall_ms": 41,
+  "wall_ms": 39,
   "workers": [
     {
       "cdp_commands": 11,
@@ -26,11 +26,12 @@
       },
       "id": "login",
       "ok": true,
+      "reset_ms": 1,
       "round_trips": 11,
       "step_ms": [
         {
           "i": 0,
-          "ms": 24,
+          "ms": 14,
           "op": "navigate"
         },
         {
@@ -45,17 +46,17 @@
         },
         {
           "i": 3,
-          "ms": 2,
+          "ms": 0,
           "op": "fill"
         },
         {
           "i": 4,
-          "ms": 0,
+          "ms": 1,
           "op": "click"
         },
         {
           "i": 5,
-          "ms": 10,
+          "ms": 18,
           "op": "wait"
         },
         {
@@ -65,7 +66,7 @@
         }
       ],
       "steps": 7,
-      "wall_ms": 41
+      "wall_ms": 38
     }
   ]
 }
