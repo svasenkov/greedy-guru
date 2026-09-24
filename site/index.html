@@ -177,6 +177,142 @@
   </div>
   <p class="cap" id="matrix-meta">Протокол: <code>greedy bench --repeat 10</code> — warmup и первый прогон клетки выбрасываются. Сырые прогоны — в <a href="bench-matrix.json">bench-matrix.json</a>.</p>
 
+  <h2>Три контура запуска</h2>
+
+  <p class="cap" style="margin:0 0 0.4rem"><b style="color:var(--text)">1 · CI-мельница.</b> Jenkins держит один слот пула через демон и гоняет login/logout/register/home; статусы кейсов уезжают в TestOps.</p>
+  <div class="flow"><div class="scroll">
+  <svg viewBox="0 0 720 96" role="img" aria-label="CI: GitHub, Jenkins, hot-cdp-daemon, Selenoid Chrome, TestOps">
+    <defs>
+      <marker id="arw1" viewBox="0 0 9 9" refX="8" refY="4.5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L9 4.5 L0 9 z" fill="#5b6270"/>
+      </marker>
+    </defs>
+    <g font-family="ui-sans-serif, system-ui, sans-serif">
+      <rect x="8" y="14" width="128" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="22" y="38" fill="#e8eaed" font-size="13">GitHub</text>
+      <text x="22" y="57" fill="#9aa0a6" font-size="10.5">тесты · кристаллы</text>
+      <rect x="96" y="22" width="15" height="15" rx="3" fill="#3178c6"/>
+      <text x="103.5" y="33" fill="#fff" font-size="8.5" font-weight="700" text-anchor="middle">TS</text>
+      <circle cx="117" cy="29.5" r="5" fill="#2ead33"/>
+      <circle cx="124" cy="29.5" r="5" fill="#e2574c" fill-opacity="0.9"/>
+
+      <rect x="152" y="14" width="128" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="166" y="38" fill="#e8eaed" font-size="13">Jenkins</text>
+      <text x="166" y="57" fill="#9aa0a6" font-size="10.5">job go-cdp-hot-pool</text>
+
+      <rect x="296" y="14" width="128" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="310" y="38" fill="#e8eaed" font-size="13">hot-cdp-daemon</text>
+      <text x="310" y="57" fill="#9aa0a6" font-size="10.5">держит min-1</text>
+      <rect x="398" y="22" width="17" height="15" rx="3" fill="#00add8"/>
+      <text x="406.5" y="33" fill="#fff" font-size="8.5" font-weight="700" text-anchor="middle">Go</text>
+
+      <rect x="440" y="14" width="128" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="454" y="38" fill="#e8eaed" font-size="13">hot Chrome</text>
+      <text x="454" y="57" fill="#9aa0a6" font-size="10.5">слот пула Selenoid</text>
+      <g transform="translate(545,22)">
+        <path d="M8 8 L8 0.6 A7.4 7.4 0 0 1 14.4 11.7 Z" fill="#ea4335"/>
+        <path d="M8 8 L14.4 11.7 A7.4 7.4 0 0 1 1.6 11.7 Z" fill="#fbbc05"/>
+        <path d="M8 8 L1.6 11.7 A7.4 7.4 0 0 1 8 0.6 Z" fill="#34a853"/>
+        <circle cx="8" cy="8" r="3.4" fill="#4285f4" stroke="#fff" stroke-width="1"/>
+      </g>
+
+      <rect x="584" y="14" width="128" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="598" y="38" fill="#e8eaed" font-size="13">TestOps</text>
+      <text x="598" y="57" fill="#9aa0a6" font-size="10.5">crystal_status кейса</text>
+
+      <path d="M136 46 H150" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw1)"/>
+      <path d="M280 46 H294" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw1)"/>
+      <path d="M424 46 H438" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw1)"/>
+      <path d="M568 46 H582" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw1)"/>
+    </g>
+  </svg>
+  </div></div>
+
+  <p class="cap" style="margin:1.75rem 0 0.4rem"><b style="color:var(--text)">2 · Ферма напрямую.</b> <code>greedy bench</code>/<code>run</code> лизит N слотов у пула — так замерена матрица выше (пять hot-cdp-миньонов на Box1).</p>
+  <div class="flow"><div class="scroll">
+  <svg viewBox="0 0 720 96" role="img" aria-label="Ферма: greedy bench, pool lease, пять слотов, пять Chrome по CDP">
+    <defs>
+      <marker id="arw2" viewBox="0 0 9 9" refX="8" refY="4.5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L9 4.5 L0 9 z" fill="#5b6270"/>
+      </marker>
+    </defs>
+    <g font-family="ui-sans-serif, system-ui, sans-serif">
+      <rect x="8" y="14" width="160" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="24" y="38" fill="#e8eaed" font-size="13" font-family="ui-monospace, monospace">greedy bench</text>
+      <text x="24" y="57" fill="#9aa0a6" font-size="10.5">--parallel 5</text>
+      <rect x="142" y="22" width="17" height="15" rx="3" fill="#00add8"/>
+      <text x="150.5" y="33" fill="#fff" font-size="8.5" font-weight="700" text-anchor="middle">Go</text>
+
+      <rect x="189" y="14" width="160" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="205" y="38" fill="#e8eaed" font-size="13">pool :9090</text>
+      <text x="205" y="57" fill="#9aa0a6" font-size="10.5" font-family="ui-monospace, monospace">POST /pool/lease ×5</text>
+
+      <rect x="370" y="14" width="160" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="386" y="38" fill="#e8eaed" font-size="13">слоты min-1…5</text>
+      <g fill="#8ab4f8" fill-opacity="0.85">
+        <rect x="386" y="48" width="12" height="12" rx="2"/>
+        <rect x="404" y="48" width="12" height="12" rx="2"/>
+        <rect x="422" y="48" width="12" height="12" rx="2"/>
+        <rect x="440" y="48" width="12" height="12" rx="2"/>
+        <rect x="458" y="48" width="12" height="12" rx="2"/>
+      </g>
+
+      <rect x="551" y="14" width="161" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="567" y="38" fill="#e8eaed" font-size="13">Chrome ×5</text>
+      <text x="567" y="57" fill="#9aa0a6" font-size="10.5">hot-cdp-min-*</text>
+      <g transform="translate(685,22)">
+        <path d="M8 8 L8 0.6 A7.4 7.4 0 0 1 14.4 11.7 Z" fill="#ea4335"/>
+        <path d="M8 8 L14.4 11.7 A7.4 7.4 0 0 1 1.6 11.7 Z" fill="#fbbc05"/>
+        <path d="M8 8 L1.6 11.7 A7.4 7.4 0 0 1 8 0.6 Z" fill="#34a853"/>
+        <circle cx="8" cy="8" r="3.4" fill="#4285f4" stroke="#fff" stroke-width="1"/>
+      </g>
+
+      <path d="M168 46 H187" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw2)"/>
+      <path d="M349 46 H368" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw2)"/>
+      <path d="M530 46 H549" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw2)"/>
+      <rect x="520" y="37" width="38" height="17" rx="8.5" fill="#0b0d10" stroke="#8ab4f8" stroke-dasharray="3 2"/>
+      <text x="539" y="49" fill="#8ab4f8" font-size="9" font-weight="600" text-anchor="middle" font-family="ui-monospace, monospace">CDP</text>
+    </g>
+  </svg>
+  </div></div>
+
+  <p class="cap" style="margin:1.75rem 0 0.4rem"><b style="color:var(--text)">3 · Локально.</b> Один Chrome на ноуте против статичной страницы — так снят пин <b>41 ms</b> выше.</p>
+  <div class="flow"><div class="scroll">
+  <svg viewBox="0 0 720 96" role="img" aria-label="Локально: greedy run, локальный Chrome, результат 41 мс">
+    <defs>
+      <marker id="arw3" viewBox="0 0 9 9" refX="8" refY="4.5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L9 4.5 L0 9 z" fill="#5b6270"/>
+      </marker>
+    </defs>
+    <g font-family="ui-sans-serif, system-ui, sans-serif">
+      <rect x="8" y="14" width="200" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="26" y="38" fill="#e8eaed" font-size="13" font-family="ui-monospace, monospace">greedy run</text>
+      <text x="26" y="57" fill="#9aa0a6" font-size="10.5">бинарник · JSON на stdout</text>
+      <rect x="182" y="22" width="17" height="15" rx="3" fill="#00add8"/>
+      <text x="190.5" y="33" fill="#fff" font-size="8.5" font-weight="700" text-anchor="middle">Go</text>
+
+      <rect x="258" y="14" width="200" height="64" rx="8" fill="#14181e" stroke="#262c35"/>
+      <text x="276" y="38" fill="#e8eaed" font-size="13">локальный Chrome</text>
+      <text x="276" y="57" fill="#9aa0a6" font-size="10.5">Chrome.app · docker pw-min</text>
+      <g transform="translate(432,22)">
+        <path d="M8 8 L8 0.6 A7.4 7.4 0 0 1 14.4 11.7 Z" fill="#ea4335"/>
+        <path d="M8 8 L14.4 11.7 A7.4 7.4 0 0 1 1.6 11.7 Z" fill="#fbbc05"/>
+        <path d="M8 8 L1.6 11.7 A7.4 7.4 0 0 1 8 0.6 Z" fill="#34a853"/>
+        <circle cx="8" cy="8" r="3.4" fill="#4285f4" stroke="#fff" stroke-width="1"/>
+      </g>
+
+      <rect x="508" y="14" width="200" height="64" rx="8" fill="#14181e" stroke="#8ab4f8"/>
+      <text x="526" y="44" fill="#e8eaed" font-size="17" letter-spacing="-0.5">41 мс</text>
+      <text x="526" y="62" fill="#9aa0a6" font-size="10.5">пин bench.json · app-live</text>
+
+      <path d="M208 46 H256" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw3)"/>
+      <path d="M458 46 H506" stroke="#5b6270" stroke-width="1.5" marker-end="url(#arw3)"/>
+      <rect x="448" y="37" width="38" height="17" rx="8.5" fill="#0b0d10" stroke="#8ab4f8" stroke-dasharray="3 2"/>
+      <text x="467" y="49" fill="#8ab4f8" font-size="9" font-weight="600" text-anchor="middle" font-family="ui-monospace, monospace">CDP</text>
+    </g>
+  </svg>
+  </div></div>
+
   <h2>Кто решает, что кристалл рабочий</h2>
   <p>Три зелёных прогона Playwright подряд — и кейс в <a href="https://allure.qa.guru/project/5366/test-cases">TestOps</a> просится на ревью. На ревью смотрят diff, дальше <code>approve</code> проставляет статус в TestOps и коммитит JSON. Без ревью в Live уезжает только логин (<a href="https://allure.qa.guru/project/5366/test-cases/50707">кейс 50707</a>); поправили тест — кристалл возвращается на ревью.</p>
   <pre>greedy run --mode none \
