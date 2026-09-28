@@ -186,7 +186,7 @@
   <main>
     <h1>Пишите UI-тесты на&nbsp;Playwright.<br> Прогоняйте их <span class="hl">без&nbsp;Node</span>.</h1>
     <p class="lead">Playwright-тестам нужны Node и npm-пакеты на каждом CI-агенте, и каждый прогон начинается с запуска раннера и браузера.</p>
-    <p class="sub">greedy один раз сохраняет зелёный прогон в <b>кристалл</b>&nbsp;— JSON-файл с шагами и селекторами из трассы Playwright. Дальше кристалл проигрывает Go-бинарник: подключается по <a href="https://chromedevtools.github.io/devtools-protocol/">CDP</a> (протоколу Chrome DevTools) к <b>горячему Chrome</b>&nbsp;— уже запущенному браузеру&nbsp;— и проходит шаги сам.</p>
+    <p class="sub">greedy один раз сохраняет зелёный прогон в <b>кристалл</b>&nbsp;— JSON-файл с шагами и селекторами из трассы Playwright. Дальше кристалл проигрывает Go-бинарник: подключается по <a href="https://chromedevtools.github.io/devtools-protocol/">CDP</a> (протоколу Chrome DevTools) к <b>горячему Chrome</b>&nbsp;— уже запущенному браузеру, например в&nbsp;Selenoid,&nbsp;— и проходит шаги сам.</p>
     <ul class="pros">
       <li><b>Один бинарник на агенте</b>Не нужно ставить и обновлять Node, <span class="nw">npm-пакеты</span> и браузеры Playwright.</li>
       <li><b>Без ожидания браузера</b>Chrome уже запущен, прогон сразу идёт по шагам<span id="hero-bench"></span>.</li>
